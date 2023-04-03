@@ -94,9 +94,6 @@ MODULE HCOX_GC_RnPbBe_Mod
        INTEGER               :: IDTBe10Trop90S ! Index # for Be10 60-90 S troposphere
        INTEGER               :: IDTBe10Trop60S ! Index # for Be10 30-60 S troposphere
        INTEGER               :: IDTBe10Trop30S ! Index # for Be10 00-30 S troposphere
-       INTEGER               :: IDTBe10Stra90S30S ! Index # for Be10 60-90 S troposphere
-       INTEGER               :: IDTBe10Stra30S30N ! Index # for Be10 30-60 S troposphere
-       INTEGER               :: IDTBe10Stra30N90N ! Index # for Be10 00-30 S troposphere
        ! <<< mzheng
 
 
@@ -115,9 +112,6 @@ MODULE HCOX_GC_RnPbBe_Mod
        REAL(hp), POINTER     :: EmissBe10Trop90S(:,:,:)
        REAL(hp), POINTER     :: EmissBe10Trop60S(:,:,:)
        REAL(hp), POINTER     :: EmissBe10Trop30S(:,:,:)
-       REAL(hp), POINTER     :: EmissBe10Stra90S30S(:,:,:)
-       REAL(hp), POINTER     :: EmissBe10Stra30S30N(:,:,:)
-       REAL(hp), POINTER     :: EmissBe10Stra30N90N(:,:,:)
        ! <<< mzheng
 
     
@@ -458,8 +452,6 @@ MODULE HCOX_GC_RnPbBe_Mod
             !   ! latitude
             !   WRITE(*,*) 'latitude'
             !   WRITE(*,*) Inst%EmissBe10 (1,:,1)
-
-
             !   STOP
 
             
@@ -486,7 +478,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                          WRITE(*,*) I,J,L, ADD_Be7, ADD_Be10
                          STOP
                        ENDIF
-                      
+             
                        IF ( L > ExtState%TropLev%Arr%Val(I,J) ) THEN
                           IF ( Inst%IDTBe7Strat > 0 ) THEN
                              Inst%EmissBe7Strat (I,J,L) = Add_Be7
@@ -494,22 +486,6 @@ MODULE HCOX_GC_RnPbBe_Mod
                           IF ( Inst%IDTBe10Strat > 0 ) THEN 
                              Inst%EmissBe10Strat(I,J,L) = Add_Be10
                            ENDIF 
-
-                        ! >>> mzheng, for stratosphere 
-                           IF (HcoState%Grid%YMID%Val( I, J ) > 30 ) THEN 
-                              IF ( Inst%IDTBe10Stra30N90N > 0 ) THEN
-                                 Inst%EmissBe10Stra30N90N(I,J,L) = Add_Be10
-                              ENDIF
-                           ELSEIF (HcoState%Grid%YMID%Val( I, J ) < -30 ) THEN 
-                              IF ( Inst%IDTBe10Stra90S30S > 0 ) THEN
-                                 Inst%EmissBe10Stra90S30S(I,J,L) = Add_Be10
-                              ENDIF
-                           ELSE
-                              IF ( Inst%IDTBe10Stra30S30N > 0 ) THEN
-                                 Inst%EmissBe10Stra30S30N(I,J,L) = Add_Be10
-                              ENDIF
-                           ENDIF 
-                        ! <<< mzheng, for stratosphere 
                        ELSE
                           IF ( Inst%IDTBe7Strat > 0 ) THEN
                              Inst%EmissBe7Strat (I,J,L) = 0_hp
@@ -519,7 +495,6 @@ MODULE HCOX_GC_RnPbBe_Mod
                           ENDIF
 
                           ! >>>mzheng
-                           ! WRITE (*,*) Inst%IDTBe10Trop90N
                            IF (HcoState%Grid%YMID%Val( I, J ) > 60 ) THEN 
                               IF ( Inst%IDTBe10Trop90N > 0 ) THEN
                                  Inst%EmissBe10Trop90N(I,J,L) = Add_Be10
@@ -562,8 +537,6 @@ MODULE HCOX_GC_RnPbBe_Mod
                   ENDDO
                   ENDDO
              !$OMP END PARALLEL DO
-
-
 
 
             !>>> mzheng
@@ -634,6 +607,45 @@ MODULE HCOX_GC_RnPbBe_Mod
                  IF ( Inst%IDTBe10Strat > 0 ) THEN
                     Inst%EmissBe10Strat(I,J,L) = 0d0
                  ENDIF
+
+               ! >>> mzheng
+                IF (HcoState%Grid%YMID%Val( I, J ) > 60 ) THEN 
+                  IF ( Inst%IDTBe10Trop90N > 0 ) THEN
+                     Inst%EmissBe10Trop90N(I,J,L) = Add_Be10
+                  ENDIF
+                ENDIF 
+
+                 IF (HcoState%Grid%YMID%Val( I, J ) > 30 .and. HcoState%Grid%YMID%Val( I, J ) <= 60 ) THEN 
+                  IF ( Inst%IDTBe10Trop60N > 0 ) THEN
+                     Inst%EmissBe10Trop60N(I,J,L) = Add_Be10
+                  ENDIF
+                ENDIF 
+
+                IF (HcoState%Grid%YMID%Val( I, J ) > 0 .and. HcoState%Grid%YMID%Val( I, J ) <=30 ) THEN 
+                  IF ( Inst%IDTBe10Trop30N > 0 ) THEN
+                     Inst%EmissBe10Trop30N(I,J,L) = Add_Be10
+                     WRITE(*,*) Add_Be10
+                  ENDIF
+                ENDIF 
+
+                IF (HcoState%Grid%YMID%Val( I, J ) < -60 ) THEN 
+                  IF ( Inst%IDTBe10Trop90S > 0 ) THEN
+                     Inst%EmissBe10Trop90S(I,J,L) = Add_Be10
+                  ENDIF
+                ENDIF 
+
+                 IF (HcoState%Grid%YMID%Val( I, J ) < -30 .and. HcoState%Grid%YMID%Val( I, J ) >= -60 ) THEN 
+                  IF ( Inst%IDTBe10Trop60S > 0 ) THEN
+                     Inst%EmissBe10Trop60S(I,J,L) = Add_Be10
+                  ENDIF
+                ENDIF 
+
+                IF (HcoState%Grid%YMID%Val( I, J ) < 0 .and. HcoState%Grid%YMID%Val( I, J ) >= -30 ) THEN 
+                  IF ( Inst%IDTBe10Trop30S > 0 ) THEN
+                     Inst%EmissBe10Trop30S(I,J,L) = Add_Be10
+                  ENDIF
+                ENDIF 
+               ! <<< mzheng
 
               ENDIF
     
@@ -773,47 +785,6 @@ MODULE HCOX_GC_RnPbBe_Mod
                  RETURN
               ENDIF
            ENDIF
-
-
-           IF ( Inst%IDTBe10Stra90S30S > 0 ) THEN
-              Arr3D => Inst%EmissBe10Stra90S30S(:,:,:)
-              CALL HCO_EmisAdd( HcoState, Arr3D, Inst%IDTBe10Stra90S30S, &
-                                RC,       ExtNr=Inst%ExtNr )
-              Arr3D => NULL()
-              IF ( RC /= HCO_SUCCESS ) THEN
-                 CALL HCO_ERROR( &
-                                 'HCO_EmisAdd error: EmissBe10Stra90S30S', RC )
-                 RETURN
-              ENDIF
-           ENDIF
-
-           IF ( Inst%IDTBe10Stra30N90N > 0 ) THEN
-              Arr3D => Inst%EmissBe10Stra30N90N(:,:,:)
-              CALL HCO_EmisAdd( HcoState, Arr3D, Inst%IDTBe10Stra30N90N, &
-                                RC,       ExtNr=Inst%ExtNr )
-              Arr3D => NULL()
-              IF ( RC /= HCO_SUCCESS ) THEN
-                 CALL HCO_ERROR( &
-                                 'HCO_EmisAdd error: EmissBe10Stra30N90N', RC )
-                 RETURN
-              ENDIF
-           ENDIF
-
-           IF ( Inst%IDTBe10Stra30S30N > 0 ) THEN
-              Arr3D => Inst%EmissBe10Stra30S30N(:,:,:)
-              CALL HCO_EmisAdd( HcoState, Arr3D, Inst%IDTBe10Stra30S30N, &
-                                RC,       ExtNr=Inst%ExtNr )
-              Arr3D => NULL()
-              IF ( RC /= HCO_SUCCESS ) THEN
-                 CALL HCO_ERROR( &
-                                 'HCO_EmisAdd error: EmissBe10Stra30S30N', RC )
-                 RETURN
-              ENDIF
-           ENDIF
-
-
-
-
            ! <<< mzheng
     
         ENDIF !IDTBe7 > 0 or IDTBe10 > 0
@@ -968,13 +939,7 @@ MODULE HCOX_GC_RnPbBe_Mod
               CASE( 'Be10Trop60S', '10BeTrop60S' )
                  Inst%IDTBe10Trop60S = HcoIDs(N) 
               CASE( 'Be10Trop30S', '10BeTrop30S' )
-                 Inst%IDTBe10Trop30S = HcoIDs(N)
-              CASE( 'Be10Stra90S30S', '10BeStra90S30S' )
-                 Inst%IDTBe10Stra90S30S = HcoIDs(N)  
-              CASE( 'Be10Stra30S30N', '10BeStra30S30N' )
-                 Inst%IDTBe10Stra30S30N = HcoIDs(N) 
-              CASE( 'Be10Stra30N90N', '10BeStra30N90N' )
-                 Inst%IDTBe10Stra30N90N = HcoIDs(N)
+                 Inst%IDTBe10Trop30N = HcoIDs(N)
               ! <<< mzheng
               CASE DEFAULT
                  ! Do nothing
@@ -1102,7 +1067,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop90N', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop90N = 0.0_hp
@@ -1113,7 +1078,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop60N', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop60N = 0.0_hp
@@ -1124,7 +1089,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop30N', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop30N = 0.0_hp
@@ -1135,7 +1100,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop90S', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop90S = 0.0_hp
@@ -1146,7 +1111,7 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop60S', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop60S = 0.0_hp
@@ -1157,44 +1122,10 @@ MODULE HCOX_GC_RnPbBe_Mod
                      STAT=RC )
            IF ( RC /= 0 ) THEN
               CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Trop30S', RC )
+                               'Cannot allocate EmissBe10Strat', RC )
               RETURN
            ENDIF
            Inst%EmissBe10Trop30S = 0.0_hp
-        ENDIF
-
-
-         IF ( Inst%IDTBe10Stra90S30S > 0 ) THEN
-           ALLOCATE( Inst%EmissBe10Stra90S30S( HcoState%Nx, HcoState%NY, HcoState%NZ ), &
-                     STAT=RC )
-           IF ( RC /= 0 ) THEN
-              CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Stra90S30S', RC )
-              RETURN
-           ENDIF
-           Inst%EmissBe10Stra90S30S = 0.0_hp
-        ENDIF
-
-        IF ( Inst%IDTBe10Stra30S30N > 0 ) THEN
-           ALLOCATE( Inst%EmissBe10Stra30S30N( HcoState%Nx, HcoState%NY, HcoState%NZ ), &
-                     STAT=RC )
-           IF ( RC /= 0 ) THEN
-              CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Stra30S30N', RC )
-              RETURN
-           ENDIF
-           Inst%EmissBe10Stra30S30N = 0.0_hp
-        ENDIF
-
-        IF ( Inst%IDTBe10Stra30N90N > 0 ) THEN
-           ALLOCATE( Inst%EmissBe10Stra30N90N( HcoState%Nx, HcoState%NY, HcoState%NZ ), &
-                     STAT=RC )
-           IF ( RC /= 0 ) THEN
-              CALL HCO_ERROR ( &
-                               'Cannot allocate EmissBe10Stra30N90N', RC )
-              RETURN
-           ENDIF
-           Inst%EmissBe10Stra30N90N = 0.0_hp
         ENDIF
          ! <<< mzheng
 
@@ -1773,9 +1704,6 @@ MODULE HCOX_GC_RnPbBe_Mod
               IF ( ASSOCIATED(Inst%EmissBe10Trop30S) ) DEALLOCATE(Inst%EmissBe10Trop30S)
               IF ( ASSOCIATED(Inst%EmissBe10Trop60S) ) DEALLOCATE(Inst%EmissBe10Trop60S)
               IF ( ASSOCIATED(Inst%EmissBe10Trop90S) ) DEALLOCATE(Inst%EmissBe10Trop90S)
-              IF ( ASSOCIATED(Inst%EmissBe10Stra30N90N) ) DEALLOCATE(Inst%EmissBe10Stra30N90N)
-              IF ( ASSOCIATED(Inst%EmissBe10Stra90S30S) ) DEALLOCATE(Inst%EmissBe10Stra90S30S)
-              IF ( ASSOCIATED(Inst%EmissBe10Stra30S30N) ) DEALLOCATE(Inst%EmissBe10Stra30S30N)
                ! <<< mzheng
     
               PrevInst%NextInst => Inst%NextInst
